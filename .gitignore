@@ -1,0 +1,9 @@
+__MACOSX/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+state/sessions/
+usage.json
+*.db
