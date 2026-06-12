@@ -137,7 +137,11 @@ class BrowserSkill:
 
     def __init__(self, *, gateway_url: str = "http://localhost:8109",
                  agent_tag: str = "browser",
-                 a11y_provider_pin: str | None = "gemini",
+                 # None = no per-call pin; the gateway's agent_routing.yaml
+                 # `browser:` entry decides. Hard-pinning gemini here caused
+                 # 502/503 bursts: parallel browser nodes exceeded gemini's
+                 # 15 rpm free tier and a pinned call never falls back.
+                 a11y_provider_pin: str | None = None,
                  vision_provider_pin: str | None = None,
                  artifacts_root: str | None = None,
                  max_steps_a11y: int = 12,

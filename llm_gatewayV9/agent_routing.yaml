@@ -14,9 +14,11 @@
 # - Add a `tag: provider` line to introduce a new pin. No code change.
 
 # Session 9 routing: cognitive skills → Anthropic (Claude Haiku 4.5); Critic →
-# Groq for provider diversity in traces; browser → gemini (the a11y layer
-# pins gemini in code; the vision layer needs a vision-capable provider and
-# gemini's free tier handles screenshots).
+# Groq for provider diversity in traces (falls back to the ladder when no
+# GROQ key is configured); browser → anthropic: the a11y/vision driver loops
+# fire bursts of calls from parallel browser nodes, which blew through
+# gemini's 15 rpm free tier (502/503). Claude Haiku is vision-capable with
+# 100 rpm paid limits, so both driver layers route here now.
 planner: anthropic
 researcher: anthropic
 distiller: anthropic
@@ -27,4 +29,4 @@ retriever: anthropic
 sandbox_executor: anthropic   # never hits the LLM (bypassed); pin is cosmetic
 coder: anthropic
 verifier: anthropic
-browser: gemini
+browser: anthropic

@@ -174,14 +174,20 @@ a `critic`: it does not trigger re-planning, it annotates the answer. (If a
 that case put the verifier BEFORE the coder, checking the raw evidence.)
 
 Worked example — "compare the top 3 text-generation models on Hugging Face
-by downloads": emit ONE browser node (url=https://huggingface.co/models,
-goal="filter Tasks=Text Generation, sort by Most Downloads, extract the top
-3 model names, their URLs, downloads and likes"). Let that node's OUTPUT
-drive the rest: emit a distiller depending on it to pull the 3 model URLs
-into structured fields, then (as successors from the distiller or in your
-recovery turn) one browser node per model page with an extraction goal
-("extract downloads, likes, license, parameter count"), a distiller over
-those three, and a formatter that depends on the distiller to render the
-comparison table. If the user's request hinges on the ranking being right,
-add a verifier between the distiller and formatter checking "these are the
-top 3 by downloads" against the list-page evidence.
+by downloads": your seed plan contains EXACTLY THREE nodes.
+  1. browser  label=b_list, url=https://huggingface.co/models,
+     goal="filter Tasks=Text Generation, sort by Most Downloads, extract
+     the top 3 model names, their full model-page URLs, downloads, likes"
+  2. distiller label=d_list, inputs=["n:b_list"], question="extract the
+     top 3 model names and their full https://huggingface.co/<org>/<model>
+     URLs as structured fields; then emit successors: one browser node per
+     extracted model URL (goal: extract downloads, likes, license,
+     parameter count), a distiller over those browser nodes, and a final
+     formatter listing USER_QUERY and that distiller"
+  3. formatter label=f_seed, inputs=["USER_QUERY", "n:d_list"]
+Do NOT emit per-model browser nodes yourself: you do not know the model
+URLs yet, and a browser node with a guessed or placeholder URL fails. The
+distiller emits them as successors once the REAL urls exist in its output
+(the graph grows at runtime — f_seed is just the safety net; the
+distiller's final formatter runs later and supersedes it). Never schedule
+more than three browser nodes to run in parallel.
