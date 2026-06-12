@@ -92,12 +92,37 @@ def _launch_options() -> dict:
     """Demo-mode Chromium options from env. BROWSER_HEADFUL=1 opens a visible
     browser window; BROWSER_SLOWMO_MS=<int> pauses that many ms between
     Playwright actions so a human (or a screen recording) can follow the
-    clicks. Defaults preserve normal headless operation."""
-    opts: dict = {"headless": os.environ.get("BROWSER_HEADFUL") != "1"}
+    clicks. Defaults preserve normal headless operation.
+
+    Headless runs use channel="chromium" (Playwright's NEW headless mode,
+    which shares real Chrome's network fingerprint). The default headless
+    shell has a distinctive TLS/HTTP2 fingerprint that contradicts the
+    spoofed Chrome user-agent below, and huggingface.co's edge resets such
+    connections (observed: net::ERR_CONNECTION_RESET, intermittent)."""
+    headless = os.environ.get("BROWSER_HEADFUL") != "1"
+    opts: dict = {"headless": headless}
+    if headless:
+        opts["channel"] = "chromium"
     slow = os.environ.get("BROWSER_SLOWMO_MS", "")
     if slow.isdigit() and int(slow) > 0:
         opts["slow_mo"] = int(slow)
     return opts
+
+
+async def _goto_with_retries(page, url: str, attempts: int = 3) -> None:
+    """page.goto with backoff. Anti-bot edges (and busy corporate networks)
+    drop the occasional TCP connection; one reset should not kill a whole
+    DAG node when the next attempt usually succeeds."""
+    last: Exception | None = None
+    for i in range(attempts):
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            return
+        except Exception as e:                          # noqa: BLE001
+            last = e
+            if i < attempts - 1:
+                await asyncio.sleep(2.0 * (i + 1))
+    raise last  # type: ignore[misc]
 
 
 async def _fetch_html(url: str, timeout: float = 30.0) -> tuple[str, str]:
@@ -287,7 +312,7 @@ class BrowserSkill:
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                await _goto_with_retries(page, url)
                 # Last-chance gateway-block check on the rendered page (some
                 # walls only show up after JS executes).
                 kind = detect_gateway_block(await page.content())
@@ -335,7 +360,7 @@ class BrowserSkill:
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                await _goto_with_retries(page, url)
                 for i, step in enumerate(selectors, start=1):
                     sel = step.get("selector")
                     if not sel:
