@@ -566,11 +566,15 @@ class AnthropicProvider(BaseProvider):
                 text = _extract_text_blocks(content)
                 if text:
                     blocks.append({"type": "text", "text": text})
-                out.append({
-                    "role": r if r in ("user", "assistant") else "user",
-                    "content": blocks,
-                })
-                continue
+                if blocks:
+                    out.append({
+                        "role": r if r in ("user", "assistant") else "user",
+                        "content": blocks,
+                    })
+                    continue
+                # No convertible image data and no text — fall through to the
+                # plain-string path below rather than emit an empty content
+                # array (Anthropic 400s on empty message content).
             out.append({
                 "role": r if r in ("user", "assistant") else "user",
                 "content": content if isinstance(content, str) else json.dumps(content),
