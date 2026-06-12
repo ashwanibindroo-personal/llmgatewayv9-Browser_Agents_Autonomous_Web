@@ -82,7 +82,14 @@ coder:
   internal_successors: [sandbox_executor]
   temperature: 0.2
   max_tokens: 1500
-  description: STUB. Student assignment for Session 8. Emits Python code; the orchestrator hands it to sandbox_executor next.
+  description: Writes a short Python program to compute an exact answer; the orchestrator runs it in the sandbox and a formatter presents the executed result.
+
+verifier:
+  prompt: prompts/verifier.md
+  tools_allowed: []
+  temperature: 0.0         # checking a claim should be deterministic
+  max_tokens: 600
+  description: Independently checks whether a specific claim is supported by the evidence in its inputs; emits holds/refuted/unsupported with a confidence score. Unlike critic, it annotates rather than triggering re-planning.
 
 browser:
   prompt: prompts/browser.md

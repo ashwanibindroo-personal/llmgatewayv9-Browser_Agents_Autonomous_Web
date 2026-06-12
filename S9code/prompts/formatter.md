@@ -25,3 +25,7 @@ Rules:
     to the user rather than inventing.
   - Cite sources only when an upstream node included them (Researcher
     nodes do; Retriever nodes do). Do not invent URLs.
+  - If an upstream `verifier` node is present, respect its verdict: when it
+    is "holds", you may state the claim confidently; when it is "refuted" or
+    "unsupported", add a short honest caveat (e.g. "note: this could not be
+    confirmed from the evidence") and reflect its `reason`.

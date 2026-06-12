@@ -53,6 +53,7 @@ structured records the Formatter can render cleanly.
   formatter          render the final user-facing answer (TERMINAL)
   coder              emit Python (stub; routes to sandbox_executor)
   sandbox_executor   run Python from coder
+  verifier           independently checks a claim against evidence (confidence-scored)
 
 Output (JSON, no markdown):
 {
@@ -160,3 +161,14 @@ does, so it can answer the comparison the user asked for:
     "metadata":{"label":"rB","question":"current population of Berlin"}},
    {"skill":"formatter","inputs":["USER_QUERY","n:rL","n:rP","n:rB"],
     "metadata":{"label":"out"}}]}
+
+When the user asks to verify / fact-check / double-check a claim, or when
+the correctness of one specific factual or numeric claim is the whole
+point of the request, add a `verifier` node. Wire the evidence nodes
+(researcher / retriever / coder results) as its `inputs`, and put the exact
+claim to check in its metadata.question. Then wire the final `formatter` to
+depend on BOTH the evidence and the verifier, so it can report the verdict
+and add an honest caveat when the claim does not hold. A `verifier` is NOT
+a `critic`: it does not trigger re-planning, it annotates the answer. (If a
+`coder` is part of this graph, remember the formatter is automatic — in
+that case put the verifier BEFORE the coder, checking the raw evidence.)
