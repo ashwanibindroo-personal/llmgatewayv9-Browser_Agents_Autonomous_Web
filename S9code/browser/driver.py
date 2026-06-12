@@ -82,7 +82,10 @@ SYSTEM_PROMPT_VISION = (
     "  done(success, note)        — finish; success=true if the goal is met\n"
     "Return MULTIPLE actions in a turn only when their effect is obvious; "
     "otherwise emit one action and let the next screenshot inform the next "
-    "step. Be terse in `thinking` — one or two sentences."
+    "step. For 'extract/report X' goals: you never copy content yourself — "
+    "the harness harvests the page text automatically after you finish; "
+    "reach the page state where X is visible, then done(success=true). "
+    "Be terse in `thinking` — one or two sentences."
 )
 
 SYSTEM_PROMPT_A11Y = (
@@ -116,6 +119,15 @@ SYSTEM_PROMPT_A11Y = (
     "    done. The `PAGE URL` line in your prompt is your ground truth for "
     "    filter state on apps that encode filters in the URL.\n"
     "  - At most 2 actions per turn. Most turns should be ONE action.\n"
+    "  - EXTRACTION GOALS: you never read or copy page content yourself — "
+    "    the harness harvests the page's full text automatically AFTER you "
+    "    finish. When the goal says 'extract/report X', your job is only to "
+    "    reach the page state where X is on screen (filters applied, sort "
+    "    applied, right page open) and then declare done(success=true) with "
+    "    a one-line note. NEVER declare done(success=false) because you "
+    "    'cannot see' the content — if the element list / PAGE URL confirms "
+    "    the requested state, that IS success. (The element names often "
+    "    already show the data, e.g. 'model-name • 912k • 960'.)\n"
     "Be terse in `thinking` — one or two sentences."
 )
 

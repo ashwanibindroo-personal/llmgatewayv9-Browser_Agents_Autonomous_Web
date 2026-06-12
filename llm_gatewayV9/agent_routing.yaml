@@ -23,7 +23,8 @@ planner: anthropic
 researcher: anthropic
 distiller: anthropic
 summariser: anthropic
-critic: groq
+critic: anthropic   # was groq, but no GROQ key is configured in .env and the
+                    # fallback ladder 503'd under parallel critic bursts
 formatter: anthropic
 retriever: anthropic
 sandbox_executor: anthropic   # never hits the LLM (bypassed); pin is cosmetic
