@@ -26,6 +26,7 @@ ported verbatim from S9SharedCode/code/browser/ and untouched.
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -85,6 +86,18 @@ def detect_gateway_block(html: str) -> str | None:
 _UA = (
     "Mozilla/5.0 (compatible; S9-Browser-Skill/0.1; +llm_gatewayV9)"
 )
+
+
+def _launch_options() -> dict:
+    """Demo-mode Chromium options from env. BROWSER_HEADFUL=1 opens a visible
+    browser window; BROWSER_SLOWMO_MS=<int> pauses that many ms between
+    Playwright actions so a human (or a screen recording) can follow the
+    clicks. Defaults preserve normal headless operation."""
+    opts: dict = {"headless": os.environ.get("BROWSER_HEADFUL") != "1"}
+    slow = os.environ.get("BROWSER_SLOWMO_MS", "")
+    if slow.isdigit() and int(slow) > 0:
+        opts["slow_mo"] = int(slow)
+    return opts
 
 
 async def _fetch_html(url: str, timeout: float = 30.0) -> tuple[str, str]:
@@ -254,7 +267,7 @@ class BrowserSkill:
             sub.mkdir(parents=True, exist_ok=True)
             artifacts_dir = str(sub)
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(**_launch_options())
             ctx = await browser.new_context(
                 viewport={"width": 1366, "height": 900},
                 user_agent=(
@@ -312,7 +325,7 @@ class BrowserSkill:
         step is `{action, selector, value?}`. Returns AgentResult on success
         or None to let the cascade fall through to a11y."""
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(**_launch_options())
             ctx = await browser.new_context(
                 viewport={"width": 1366, "height": 900},
             )
