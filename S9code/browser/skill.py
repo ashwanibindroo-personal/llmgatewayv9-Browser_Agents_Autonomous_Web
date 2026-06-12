@@ -325,6 +325,17 @@ class BrowserSkill:
                     # Annotation BrowserSkill reads to propagate the code.
                     out.gateway_blocked = True
                     return out
+                # Wait for client-side rendering to settle before the first
+                # a11y snapshot. A fixed 1s was not enough for JS-heavy lists
+                # (huggingface.co/models): the driver's first look saw only
+                # the page header, mis-clicked into the nav, and burned its
+                # whole step budget stuck there. networkidle ≈ no requests
+                # in flight for 500ms; fall back to a fixed wait when a page
+                # keeps polling forever (analytics beacons etc.).
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=8000)
+                except Exception:                          # noqa: BLE001
+                    pass
                 await asyncio.sleep(1.0)
                 cfg = DriverConfig(
                     goal=goal, max_steps=max_steps, max_failures=3,

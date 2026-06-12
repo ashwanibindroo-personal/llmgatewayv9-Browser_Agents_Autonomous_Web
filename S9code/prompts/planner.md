@@ -82,12 +82,19 @@ Scoping a worker — IMPORTANT:
     for that one page, so do NOT also list USER_QUERY on a browser
     node — same fan-out leak otherwise.
 
-When the user asks to compare or process N concrete items
-("compare A, B, C" / "top 3 results"), emit one node per item so
-the orchestrator can run them in parallel. Do NOT consolidate.
+When the user asks to compare or process N concrete items the
+user NAMED THEMSELVES ("compare A, B, C"), emit one node per item
+so the orchestrator can run them in parallel. Do NOT consolidate.
 Each per-item worker must carry its item in `metadata.question`
 (or in `metadata.goal` for browser nodes) and must NOT list
 USER_QUERY in its inputs.
+EXCEPTION — if the N items must first be DISCOVERED from a listing
+("top 3 X on site Y", "the most downloaded…"), you cannot fan out
+yet: you do not know the items or their URLs. NEVER emit a browser
+node without a real `metadata.url`. Seed only the listing browser
+and a distiller whose question instructs it to emit the per-item
+nodes as successors once the real URLs exist (see the worked
+example at the end of this prompt).
 
 When the user demands a strict format constraint the writer might
 miss ("exactly 5-7-5 syllables", "valid JSON", "≤ 280 characters"),
