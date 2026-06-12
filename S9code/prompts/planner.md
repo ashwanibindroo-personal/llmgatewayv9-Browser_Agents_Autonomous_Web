@@ -172,3 +172,16 @@ and add an honest caveat when the claim does not hold. A `verifier` is NOT
 a `critic`: it does not trigger re-planning, it annotates the answer. (If a
 `coder` is part of this graph, remember the formatter is automatic — in
 that case put the verifier BEFORE the coder, checking the raw evidence.)
+
+Worked example — "compare the top 3 text-generation models on Hugging Face
+by downloads": emit ONE browser node (url=https://huggingface.co/models,
+goal="filter Tasks=Text Generation, sort by Most Downloads, extract the top
+3 model names, their URLs, downloads and likes"). Let that node's OUTPUT
+drive the rest: emit a distiller depending on it to pull the 3 model URLs
+into structured fields, then (as successors from the distiller or in your
+recovery turn) one browser node per model page with an extraction goal
+("extract downloads, likes, license, parameter count"), a distiller over
+those three, and a formatter that depends on the distiller to render the
+comparison table. If the user's request hinges on the ranking being right,
+add a verifier between the distiller and formatter checking "these are the
+top 3 by downloads" against the list-page evidence.
