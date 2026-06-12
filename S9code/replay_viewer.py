@@ -205,6 +205,10 @@ def _render_costs(costs, states, browser_turns: int) -> str:
 
 
 def render_session(session_id: str, gateway_url: str = DEFAULT_GATEWAY) -> str:
+    # Guard before SessionStore(): its __init__ mkdirs the session dir, so a
+    # typo'd id would otherwise yield a junk directory and a silent empty report.
+    if not (_persistence_module.SESSIONS_ROOT / session_id).exists():
+        raise FileNotFoundError(f"session not found: {session_id}")
     store = SessionStore(session_id)
     states = store.read_all_nodes()
     query = store.read_query()
