@@ -310,6 +310,9 @@ async def run_skill(skill: Skill, node_id: str, graph_nodes,
         sk = BrowserSkill(
             artifacts_root=str(ROOT / "state" / "sessions" / session_id / "browser"),
             session=session_id,
+            # 12 steps proved too tight for filter+sort+extract journeys on
+            # JS-heavy listings once the driver takes a single detour.
+            max_steps_a11y=18,
         )
         result = await sk.run(node_spec)
         if not result.elapsed_s:

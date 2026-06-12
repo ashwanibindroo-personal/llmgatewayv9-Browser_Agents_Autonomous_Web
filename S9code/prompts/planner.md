@@ -183,8 +183,13 @@ that case put the verifier BEFORE the coder, checking the raw evidence.)
 Worked example — "compare the top 3 text-generation models on Hugging Face
 by downloads": your seed plan contains EXACTLY THREE nodes.
   1. browser  label=b_list, url=https://huggingface.co/models,
-     goal="filter Tasks=Text Generation, sort by Most Downloads, extract
-     the top 3 model names, their full model-page URLs, downloads, likes"
+     goal="click the 'Text Generation' task filter link in the left
+     sidebar; then click the 'Sort: Trending' dropdown and choose 'Most
+     downloads'; then report the top 3 model entries with their names,
+     full model-page URLs, downloads and likes, and declare done"
+     (write browser goals as a PROCEDURE — name the exact links/buttons
+     to click in order and end with what to report; the page driver
+     follows recipes far more reliably than it invents navigation)
   2. distiller label=d_list, inputs=["n:b_list"], question="extract the
      top 3 model names and their full https://huggingface.co/<org>/<model>
      URLs as structured fields; then emit successors: one browser node per
