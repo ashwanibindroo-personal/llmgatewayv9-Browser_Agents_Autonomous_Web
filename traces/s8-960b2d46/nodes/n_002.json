@@ -1,0 +1,30 @@
+{
+  "node_id": "n:2",
+  "skill": "browser",
+  "status": "failed",
+  "inputs": [],
+  "result": {
+    "success": false,
+    "agent_name": "browser",
+    "output": {
+      "url": "https://www.reddit.com/r/LocalLLaMA/top/",
+      "goal": "On the r/LocalLLaMA top posts page, extract the titles of the top 5 posts visible in the listing. Report each title verbatim and declare done.",
+      "path": "extract",
+      "turns": 0,
+      "content": null,
+      "actions": [],
+      "final_url": null
+    },
+    "artifacts": [],
+    "successors": [],
+    "cost": 0.0,
+    "elapsed_s": 12.073057889938354,
+    "provider": "",
+    "error": "gateway_blocked (recaptcha) detected after JS render at https://www.reddit.com/r/LocalLLaMA/top/?solution=076bdac23f410410076bdac23f410410&js_challenge=1&token=7afd7253fec22262ff1c52b1703fe9ec2d9866f0ae9504cea7e4c45d9f07fde8&jsc_orig_r=",
+    "error_code": "gateway_blocked"
+  },
+  "prompt_sent": "The Browser skill fetches and interacts with web pages. It walks a\nfour-layer cascade starting from the cheapest path (HTML extraction)\nand escalating only when needed (deterministic selectors, accessibility\ntree, then visual set-of-marks with a vision model). The escalation\nis internal; you pass `url` and `goal`, the skill chooses the layer.\n\nInputs: `metadata.url` (required), `metadata.goal` (required, free-text\ndescription of what to extract or do). Output: `BrowserOutput` with\n`content` (for extraction goals) or `actions` plus `final_url` (for\ninteraction goals), and `path` reporting the cascade layer that\nactually ran. When the page is gated by CAPTCHA or login, the skill\nreturns `error_code=\"gateway_blocked\"` and no content; the Planner\nshould route around by trying a different source URL or by handing\nback to the user.\n\nINPUTS:\n[]",
+  "started_at": 1781339392.6978252,
+  "completed_at": 1781339404.7708836,
+  "retries": 0
+}

@@ -90,11 +90,17 @@ uv run python replay.py <session-id>     # Enter=next, p=prompt, o=output, q=qui
 
 ## Step 6 (optional, for the video) — show the "blocked" layer
 
-Point the agent at a login/CAPTCHA-walled page to see the cascade return
-`gateway_blocked` and recovery re-plan around it:
+Point the agent at a page that *looks* like content but is anti-bot walled,
+so the cascade detects the wall and returns `gateway_blocked`. Reddit serves
+automated browsers a reCAPTCHA on subreddit pages, which the detector catches:
 ```powershell
-uv run python flow.py "From https://www.instagram.com/accounts/login extract the trending posts"
+uv run python flow.py "Get the top 5 posts from the r/LocalLLaMA subreddit at https://www.reddit.com/r/LocalLLaMA/top/ and list their titles"
 ```
+Expect the browser node to fail in ~12s with
+`gateway_blocked (recaptcha)`. A committed example is in
+`traces/s8-960b2d46/`. (Naming an obvious login URL like
+`reddit.com/login` won't work — the Planner recognizes it and declines to
+browse; the target must read as a real content page.)
 
 ## Troubleshooting
 

@@ -313,9 +313,34 @@ class BrowserSkill:
             page = await ctx.new_page()
             try:
                 await _goto_with_retries(page, url)
-                # Last-chance gateway-block check on the rendered page (some
-                # walls only show up after JS executes).
-                kind = detect_gateway_block(await page.content())
+                # Wait for client-side rendering to settle BEFORE we inspect
+                # the page. A fixed 1s was not enough for JS-heavy lists
+                # (huggingface.co/models): the driver's first look saw only
+                # the page header, mis-clicked into the nav, and burned its
+                # whole step budget stuck there. networkidle ≈ no requests
+                # in flight for 500ms; fall back to a fixed wait when a page
+                # keeps polling forever (analytics beacons etc.).
+                #
+                # This wait must precede the gateway-block check: anti-bot
+                # walls (e.g. Reddit's reCAPTCHA) redirect to a challenge URL
+                # after load, and reading page.content() mid-redirect raises
+                # "Unable to retrieve content" — which surfaced as a generic
+                # interaction_failed instead of the clean gateway_blocked the
+                # recovery path keys on.
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=8000)
+                except Exception:                          # noqa: BLE001
+                    pass
+                await asyncio.sleep(1.0)
+                # Gateway-block check on the rendered page (some walls only
+                # show up after JS executes). Defensive read: if the page is
+                # still navigating, treat an unreadable body as "no marker"
+                # and let the driver loop proceed rather than crashing here.
+                try:
+                    rendered_html = await page.content()
+                except Exception:                          # noqa: BLE001
+                    rendered_html = ""
+                kind = detect_gateway_block(rendered_html)
                 if kind:
                     await browser.close()
                     out = DriverResult(
@@ -325,18 +350,6 @@ class BrowserSkill:
                     # Annotation BrowserSkill reads to propagate the code.
                     out.gateway_blocked = True
                     return out
-                # Wait for client-side rendering to settle before the first
-                # a11y snapshot. A fixed 1s was not enough for JS-heavy lists
-                # (huggingface.co/models): the driver's first look saw only
-                # the page header, mis-clicked into the nav, and burned its
-                # whole step budget stuck there. networkidle ≈ no requests
-                # in flight for 500ms; fall back to a fixed wait when a page
-                # keeps polling forever (analytics beacons etc.).
-                try:
-                    await page.wait_for_load_state("networkidle", timeout=8000)
-                except Exception:                          # noqa: BLE001
-                    pass
-                await asyncio.sleep(1.0)
                 cfg = DriverConfig(
                     goal=goal, max_steps=max_steps, max_failures=3,
                     artifacts_dir=artifacts_dir, provider=provider_pin,

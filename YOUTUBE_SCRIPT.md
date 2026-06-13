@@ -80,11 +80,16 @@ Scroll through and call out each of the eight tracked items:
 
 ## Scene 7 — Optional: the blocked layer (45s)
 ```powershell
-uv run python flow.py "From https://www.instagram.com/accounts/login extract the trending posts"
+uv run python flow.py "Get the top 5 posts from the r/LocalLLaMA subreddit at https://www.reddit.com/r/LocalLLaMA/top/ and list their titles"
 ```
-> "To show the *blocked* layer deliberately: point it at a login wall. The
-> cascade detects the wall, returns `gateway_blocked`, and recovery re-plans
-> around the dead URL instead of getting stuck. Failure is handled as data."
+> "To show the *blocked* layer deliberately: this reads like a normal content
+> request, but Reddit serves an automated browser a reCAPTCHA. Watch — the
+> browser node fails in about 12 seconds with `gateway_blocked (recaptcha)`.
+> The cascade recognized the wall instead of getting stuck on it, and the agent
+> hands back gracefully. Failure is handled as data."
+
+A committed example of this run is in `traces/s8-960b2d46/replay.html` — its
+DAG shows the browser node with a red **blocked** badge.
 
 ## Scene 8 — Wrap (45s, talking head)
 > "Everything you saw plugged into a frozen orchestrator. `flow.py` is

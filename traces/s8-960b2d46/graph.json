@@ -1,0 +1,162 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "skill": "planner",
+      "inputs": [
+        "USER_QUERY"
+      ],
+      "metadata": {},
+      "status": "complete",
+      "result": {
+        "success": true,
+        "agent_name": "planner",
+        "output": {
+          "rationale": "The user targets a specific Reddit listing page with a time-based sort (top posts). Browser is the right tool because Reddit's top posts are dynamically rendered and require navigating the site's native sort/filter UI. A single browse will surface all 5 titles; distiller will extract them into a clean list.",
+          "nodes": [
+            {
+              "skill": "browser",
+              "inputs": [],
+              "metadata": {
+                "label": "b_reddit",
+                "url": "https://www.reddit.com/r/LocalLLaMA/top/",
+                "goal": "On the r/LocalLLaMA top posts page, extract the titles of the top 5 posts visible in the listing. Report each title verbatim and declare done."
+              }
+            },
+            {
+              "skill": "distiller",
+              "inputs": [
+                "n:b_reddit"
+              ],
+              "metadata": {
+                "label": "d_titles",
+                "question": "Extract the 5 post titles from the raw page text. Return them as a numbered list: post_1_title, post_2_title, ..., post_5_title. Do NOT emit successors."
+              }
+            },
+            {
+              "skill": "formatter",
+              "inputs": [
+                "USER_QUERY",
+                "n:d_titles"
+              ],
+              "metadata": {
+                "label": "out"
+              }
+            }
+          ]
+        },
+        "artifacts": [],
+        "successors": [
+          {
+            "skill": "browser",
+            "inputs": [],
+            "metadata": {
+              "label": "b_reddit",
+              "url": "https://www.reddit.com/r/LocalLLaMA/top/",
+              "goal": "On the r/LocalLLaMA top posts page, extract the titles of the top 5 posts visible in the listing. Report each title verbatim and declare done."
+            }
+          },
+          {
+            "skill": "distiller",
+            "inputs": [
+              "n:b_reddit"
+            ],
+            "metadata": {
+              "label": "d_titles",
+              "question": "Extract the 5 post titles from the raw page text. Return them as a numbered list: post_1_title, post_2_title, ..., post_5_title. Do NOT emit successors."
+            }
+          },
+          {
+            "skill": "formatter",
+            "inputs": [
+              "USER_QUERY",
+              "n:d_titles"
+            ],
+            "metadata": {
+              "label": "out"
+            }
+          }
+        ],
+        "cost": 0.0,
+        "elapsed_s": 6.162594556808472,
+        "provider": "anthropic",
+        "error": null,
+        "error_code": null
+      },
+      "_result_typed": true,
+      "id": "n:1"
+    },
+    {
+      "skill": "browser",
+      "inputs": [],
+      "metadata": {
+        "label": "b_reddit",
+        "url": "https://www.reddit.com/r/LocalLLaMA/top/",
+        "goal": "On the r/LocalLLaMA top posts page, extract the titles of the top 5 posts visible in the listing. Report each title verbatim and declare done."
+      },
+      "status": "failed",
+      "result": {
+        "success": false,
+        "agent_name": "browser",
+        "output": {
+          "url": "https://www.reddit.com/r/LocalLLaMA/top/",
+          "goal": "On the r/LocalLLaMA top posts page, extract the titles of the top 5 posts visible in the listing. Report each title verbatim and declare done.",
+          "path": "extract",
+          "turns": 0,
+          "content": null,
+          "actions": [],
+          "final_url": null
+        },
+        "artifacts": [],
+        "successors": [],
+        "cost": 0.0,
+        "elapsed_s": 12.073057889938354,
+        "provider": "",
+        "error": "gateway_blocked (recaptcha) detected after JS render at https://www.reddit.com/r/LocalLLaMA/top/?solution=076bdac23f410410076bdac23f410410&js_challenge=1&token=7afd7253fec22262ff1c52b1703fe9ec2d9866f0ae9504cea7e4c45d9f07fde8&jsc_orig_r=",
+        "error_code": "gateway_blocked"
+      },
+      "_result_typed": true,
+      "id": "n:2"
+    },
+    {
+      "skill": "distiller",
+      "inputs": [
+        "n:2"
+      ],
+      "metadata": {
+        "label": "d_titles",
+        "question": "Extract the 5 post titles from the raw page text. Return them as a numbered list: post_1_title, post_2_title, ..., post_5_title. Do NOT emit successors."
+      },
+      "status": "pending",
+      "id": "n:3"
+    },
+    {
+      "skill": "formatter",
+      "inputs": [
+        "USER_QUERY",
+        "n:3"
+      ],
+      "metadata": {
+        "label": "out"
+      },
+      "status": "pending",
+      "id": "n:4"
+    }
+  ],
+  "edges": [
+    {
+      "source": "n:1",
+      "target": "n:2"
+    },
+    {
+      "source": "n:2",
+      "target": "n:3"
+    },
+    {
+      "source": "n:3",
+      "target": "n:4"
+    }
+  ]
+}
