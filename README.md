@@ -13,6 +13,8 @@ cascade**.
 > **visible** browser interactions (filter, open sort dropdown, sort) along the
 > way.
 
+**▶ Demo video:** https://youtu.be/HG5miTC_bvA
+
 ## The browser cascade (the core idea)
 
 The Browser skill walks a **cost ladder** — cheapest sense first, escalating
