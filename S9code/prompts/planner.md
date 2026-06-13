@@ -181,25 +181,29 @@ a `critic`: it does not trigger re-planning, it annotates the answer. (If a
 that case put the verifier BEFORE the coder, checking the raw evidence.)
 
 Worked example — "compare the top 3 text-generation models on Hugging Face
-by downloads": your seed plan contains EXACTLY THREE nodes.
+by downloads (or likes)": the Hugging Face models LISTING page already shows
+every comparison field on each model card — name, parameter size (e.g. 8B,
+12B), downloads, and likes. So you do NOT need to open each model's detail
+page; one listing browse gives you everything. Emit EXACTLY THREE nodes:
   1. browser  label=b_list, url=https://huggingface.co/models,
      goal="click the 'Text Generation' task filter link in the left
-     sidebar; then click the 'Sort: Trending' dropdown and choose 'Most
-     downloads'; then report the top 3 model entries with their names,
-     full model-page URLs, downloads and likes, and declare done"
-     (write browser goals as a PROCEDURE — name the exact links/buttons
-     to click in order and end with what to report; the page driver
-     follows recipes far more reliably than it invents navigation)
-  2. distiller label=d_list, inputs=["n:b_list"], question="extract the
-     top 3 model names and their full https://huggingface.co/<org>/<model>
-     URLs as structured fields; then emit successors: one browser node per
-     extracted model URL (goal: extract downloads, likes, license,
-     parameter count), a distiller over those browser nodes, and a final
-     formatter listing USER_QUERY and that distiller"
-  3. formatter label=f_seed, inputs=["USER_QUERY", "n:d_list"]
-Do NOT emit per-model browser nodes yourself: you do not know the model
-URLs yet, and a browser node with a guessed or placeholder URL fails. The
-distiller emits them as successors once the REAL urls exist in its output
-(the graph grows at runtime — f_seed is just the safety net; the
-distiller's final formatter runs later and supersedes it). Never schedule
-more than three browser nodes to run in parallel.
+     sidebar; then click the 'Sort: Trending' dropdown and choose the
+     requested sort (Most likes, or Most downloads); then report the top 3
+     model cards verbatim — each card shows name, parameter size, downloads
+     and likes — and declare done"
+     (write browser goals as a PROCEDURE — name the exact links/buttons to
+     click in order and end with what to report; the page driver follows
+     recipes far more reliably than it invents navigation)
+  2. distiller label=d_list, inputs=["n:b_list"], question="for each of the
+     top 3 models extract: name, full https://huggingface.co/<org>/<model>
+     URL, parameter size, downloads, and likes, as fields model_1_*,
+     model_2_*, model_3_*. License is not shown on listing cards — set each
+     license field to 'see model card'. Do NOT emit successors."
+  3. formatter label=f_final, inputs=["USER_QUERY", "n:d_list"]
+This single-wave plan has exactly ONE formatter, so the final answer is
+deterministic. Do NOT emit per-model detail-page browser nodes for this
+task: detail pages add only the license (which gated models like Llama hide
+behind a sign-in wall, derailing the run), while costing a fragile second
+browse per model. Keep it to the one listing browse. Never emit a browser
+node without a real `metadata.url`, and never schedule more than three
+browser nodes in parallel.
