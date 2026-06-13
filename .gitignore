@@ -7,3 +7,6 @@ __pycache__/
 state/sessions/
 usage.json
 *.db
+# Demo video — 184MB, exceeds GitHub's 100MB/file limit; share via link instead.
+# Glob so it matches whatever extension the recording uses (.mp4/.mkv/...).
+EAGV3_session9_youtube_video*
