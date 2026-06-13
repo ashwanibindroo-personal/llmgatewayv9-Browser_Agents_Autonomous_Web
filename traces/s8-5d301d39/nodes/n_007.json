@@ -1,0 +1,156 @@
+{
+  "node_id": "n:7",
+  "skill": "browser",
+  "status": "complete",
+  "inputs": [],
+  "result": {
+    "success": true,
+    "agent_name": "browser",
+    "output": {
+      "url": "https://huggingface.co/models",
+      "goal": "Click the 'Text Generation' task filter link in the left sidebar. Then click the 'Sort' dropdown and select 'Most Likes' (not downloads). Report the top 3 model cards verbatim—each card shows name, parameter size, downloads, and likes—and declare done.",
+      "path": "a11y",
+      "turns": 12,
+      "content": "deepseek-ai/DeepSeek-R1\nText Generation • 685B • Updated • 5.59M • • 13.4k\nTasks\nParameters\nLibraries\nInference Providers\n373,180\nActive filters: text-generation\nText Generation • 685B • Updated • 5.59M • • 13.4k\nText Generation • 8B • Updated • 915k • • 6.57k\nText Generation • 8B • Updated • 9.87M • • 6.07k\nText Generation • 176B • Updated • 3.35k • 5.01k\nText Generation • 120B • Updated • 3.81M • • 4.88k\nText Generation • 862B • Updated • 3.38M • • 4.8k\nText Generation • 7B • Updated • 188k • 4.78k\nText Generation • 22B • Updated • 6.54M • • 4.71k\nText Generation • 8B • Updated • 1.02M • • 4.59k\nText Generation • Updated • 128 • 4.5k\nText Generation • 7B • Updated • 350k • • 4.11k\nText Generation • 685B • Updated • 999k • • 4.09k\nText Generation • 3B • Updated • 320k • • 3.47k\nText Generation • 9B • Updated • 22.2k • • 3.35k\nText Generation • 0.1B • Updated • 10.2M • 3.3k\nText Generation • 7B • Updated • 1.38M • • 3.16k\nText Generation • 685B • Updated • 896k • • 3.13k\nText Generation • 16B • Updated • 16.6k • 2.96k\nText Generation • 33B • Updated • 50k • • 2.93k\nText Generation • 71B • Updated • 658k • • 2.82k\nText Generation • 685B • Updated • 6.81M • • 2.45k\nText Generation • 1B • Updated • 2.13M • • 2.45k\nText Generation • 42B • Updated • 21.8k • 2.44k\nText Generation • Updated • 183 • 2.42k\nText Generation • 1T • Updated • 532k • • 2.37k\nText Generation • 7B • Updated • 519k • 2.32k\nText Generation • 15B • Updated • 814k • • 2.25k\nText Generation • 8B • Updated • 1.3M • • 2.25k\nText Generation • 3B • Updated • 1.44M • • 2.23k\nText Generation • 69B • Updated • 66.7k • 2.21k",
+      "actions": [
+        {
+          "turn": 1,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 36
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 2,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 37
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 3,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 79
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 4,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 81
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 5,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 36
+            },
+            {
+              "type": "wait",
+              "seconds": 1
+            }
+          ],
+          "outcome": "ok | ok"
+        },
+        {
+          "turn": 6,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 81
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 7,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 38
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 8,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 37
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 9,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 79
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 10,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 81
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 11,
+          "actions": [
+            {
+              "type": "click",
+              "mark": 36
+            }
+          ],
+          "outcome": "ok"
+        },
+        {
+          "turn": 12,
+          "actions": [
+            {
+              "type": "done",
+              "success": true,
+              "note": "Top 3 models sorted by Most Likes: (1) deepseek-ai/DeepSeek-R1 • 685B • 5.59M downloads; (2) meta-llama/Meta-Llama-3-8B • 8B • 915k downloads; (3) meta-llama/Llama-3.1-8B-Instruct • 8B • 9 (truncated)"
+            }
+          ],
+          "outcome": "done(True)"
+        }
+      ],
+      "final_url": "https://huggingface.co/models?pipeline_tag=text-generation&sort=likes"
+    },
+    "artifacts": [],
+    "successors": [],
+    "cost": 0.0,
+    "elapsed_s": 85.4933774471283,
+    "provider": "",
+    "error": null,
+    "error_code": null
+  },
+  "prompt_sent": "The Browser skill fetches and interacts with web pages. It walks a\nfour-layer cascade starting from the cheapest path (HTML extraction)\nand escalating only when needed (deterministic selectors, accessibility\ntree, then visual set-of-marks with a vision model). The escalation\nis internal; you pass `url` and `goal`, the skill chooses the layer.\n\nInputs: `metadata.url` (required), `metadata.goal` (required, free-text\ndescription of what to extract or do). Output: `BrowserOutput` with\n`content` (for extraction goals) or `actions` plus `final_url` (for\ninteraction goals), and `path` reporting the cascade layer that\nactually ran. When the page is gated by CAPTCHA or login, the skill\nreturns `error_code=\"gateway_blocked\"` and no content; the Planner\nshould route around by trying a different source URL or by handing\nback to the user.\n\nMEMORY HITS (1 from FAISS):\n  - [scratchpad] Task to compare top 3 Hugging Face text-generation models by downloads, reporting name, downloads, likes, license, and parameter count in a table\n      source: user_query\n      raw: Compare the top 3 text-generation models on Hugging Face sorted by downloads - report name, downloads, likes, license and parameter count in a comparison table\n\nINPUTS:\n[]",
+  "started_at": 1781335902.842305,
+  "completed_at": 1781335988.3356829,
+  "retries": 0
+}

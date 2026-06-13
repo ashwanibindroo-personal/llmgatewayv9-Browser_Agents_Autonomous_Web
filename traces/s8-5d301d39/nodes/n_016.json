@@ -1,0 +1,87 @@
+{
+  "node_id": "n:16",
+  "skill": "planner",
+  "status": "complete",
+  "inputs": [
+    "USER_QUERY"
+  ],
+  "result": {
+    "success": true,
+    "agent_name": "planner",
+    "output": {
+      "rationale": "The browser node returned models sorted by downloads, not likes. Re-browse the Hugging Face models listing with explicit instruction to sort by likes (not downloads), then distill and format the corrected results.",
+      "nodes": [
+        {
+          "skill": "browser",
+          "inputs": [],
+          "metadata": {
+            "label": "b_list_likes",
+            "url": "https://huggingface.co/models",
+            "goal": "Click the 'Text Generation' task filter link in the left sidebar; then click the 'Sort' dropdown and select 'Most Likes' (NOT downloads); then report the top 3 model cards verbatim — each card shows name, parameter size, downloads, and likes — and declare done"
+          }
+        },
+        {
+          "skill": "distiller",
+          "inputs": [
+            "n:b_list_likes"
+          ],
+          "metadata": {
+            "label": "d_list_likes",
+            "question": "For each of the top 3 models extract: name, full https://huggingface.co/<org>/<model> URL, parameter size, downloads, and likes, as fields model_1_name, model_1_url, model_1_params, model_1_downloads, model_1_likes (and similarly for model_2_* and model_3_*). License is not shown on listing cards — set each license field to 'see model card'. Do NOT emit successors."
+          }
+        },
+        {
+          "skill": "formatter",
+          "inputs": [
+            "USER_QUERY",
+            "n:d_list_likes"
+          ],
+          "metadata": {
+            "label": "out"
+          }
+        }
+      ]
+    },
+    "artifacts": [],
+    "successors": [
+      {
+        "skill": "browser",
+        "inputs": [],
+        "metadata": {
+          "label": "b_list_likes",
+          "url": "https://huggingface.co/models",
+          "goal": "Click the 'Text Generation' task filter link in the left sidebar; then click the 'Sort' dropdown and select 'Most Likes' (NOT downloads); then report the top 3 model cards verbatim — each card shows name, parameter size, downloads, and likes — and declare done"
+        }
+      },
+      {
+        "skill": "distiller",
+        "inputs": [
+          "n:b_list_likes"
+        ],
+        "metadata": {
+          "label": "d_list_likes",
+          "question": "For each of the top 3 models extract: name, full https://huggingface.co/<org>/<model> URL, parameter size, downloads, and likes, as fields model_1_name, model_1_url, model_1_params, model_1_downloads, model_1_likes (and similarly for model_2_* and model_3_*). License is not shown on listing cards — set each license field to 'see model card'. Do NOT emit successors."
+        }
+      },
+      {
+        "skill": "formatter",
+        "inputs": [
+          "USER_QUERY",
+          "n:d_list_likes"
+        ],
+        "metadata": {
+          "label": "out"
+        }
+      }
+    ],
+    "cost": 0.0,
+    "elapsed_s": 5.701358079910278,
+    "provider": "anthropic",
+    "error": null,
+    "error_code": null
+  },
+  "prompt_sent": "You are the Planner. Emit the next set of nodes for the orchestrator.\n\nAvailable skills:\n  retriever          search the agent's indexed knowledge base\n  browser            fetch / interact with a SPECIFIC URL through a\n                     four-layer cascade (extract → deterministic →\n                     a11y → vision). PREFER this over researcher when:\n                       - the query targets a specific site and a\n                         specific filter / sort / trending list\n                         (\"most-liked on Hugging Face\", \"top issues\n                         on GitHub\", \"newest papers on arXiv\");\n                       - the target page is JavaScript-rendered, has\n                         interactive filter widgets, or requires a\n                         multi-step navigation to surface the data\n                         (Researcher's static fetch_url will return\n                         the page chrome without the listed content);\n                       - recency matters (\"this week\", \"today\",\n                         \"recent\") and the data lives behind a\n                         site-native sort.\n                     metadata MUST set: url (str, the entry point)\n                     and goal (str, \"what to do on the page\"). The\n                     goal should be specific enough that the skill\n                     can verify success (e.g., \"filter Tasks=Text\n                     Generation, Libraries=Transformers, Sort=Most\n                     Likes; then extract the top 3 model cards\").\n                     IMPORTANT: pass the BASE URL (e.g.\n                     \"https://huggingface.co/models\" — no query\n                     string). Do NOT pre-fill the URL with the\n                     filter you want — describe the filter in\n                     `goal` instead. The skill knows how to drive\n                     the page's own filter widgets and that is the\n                     point of having Browser in the first place;\n                     a pre-filtered URL would skip the interactive\n                     path the cascade is built for.\n                     Do NOT set metadata.force_path. Let the\n                     cascade choose its own layer; the skill knows\n                     how to escalate from extract → a11y → vision\n                     when needed.\n  researcher         fetch fresh content from the web (general\n                     URLs, search). Use for open-ended research\n                     across multiple sources. Do NOT use when the\n                     answer lives in one specific site's interactive\n                     listing — that is what Browser exists for.\n\nALWAYS insert a `distiller` node between Browser and Formatter when\nthe user wants structured fields per item (a list of model_name +\nparam_count + description, a table of price + bed_count, etc.).\nBrowser returns raw page text; Distiller turns that text into the\nstructured records the Formatter can render cleanly.\n  distiller          extract structured fields from raw text\n  summariser         condense long content\n  critic             pass/fail evaluation of an upstream node\n  formatter          render the final user-facing answer (TERMINAL)\n  coder              emit Python (stub; routes to sandbox_executor)\n  sandbox_executor   run Python from coder\n  verifier           independently checks a claim against evidence (confidence-scored)\n\nOutput (JSON, no markdown):\n{\n  \"rationale\": \"<one sentence>\",\n  \"nodes\": [\n    {\"skill\": \"<name>\",\n     \"inputs\": [\"USER_QUERY\" or \"n:<label>\" or \"art:<id>\"],\n     \"metadata\": {\"label\": \"<short_id>\", \"question\": \"<optional hint>\"}}\n  ]\n}\n\nReference upstream nodes as \"n:<label>\" where label matches a\nsibling's metadata.label. The final node must be a formatter.\n\nScoping a worker — IMPORTANT:\n  - A node only sees USER_QUERY if you list \"USER_QUERY\" in its\n    `inputs`. Do NOT list USER_QUERY on a fan-out worker — it will\n    see the whole multi-item query and answer for all items.\n  - Instead, set `metadata.question` to the specific sub-question\n    for that worker. It is rendered into the worker's prompt as a\n    `QUESTION:` block.\n  - The `formatter` SHOULD list \"USER_QUERY\" in its inputs so it\n    can phrase the final answer against the user's actual ask.\n  - Browser nodes are scoped by `metadata.url` and `metadata.goal`\n    (not `metadata.question`). The goal already names the sub-task\n    for that one page, so do NOT also list USER_QUERY on a browser\n    node — same fan-out leak otherwise.\n\nWhen the user asks to compare or process N concrete items the\nuser NAMED THEMSELVES (\"compare A, B, C\"), emit one node per item\nso the orchestrator can run them in parallel. Do NOT consolidate.\nEach per-item worker must carry its item in `metadata.question`\n(or in `metadata.goal` for browser nodes) and must NOT list\nUSER_QUERY in its inputs.\nEXCEPTION — if the N items must first be DISCOVERED from a listing\n(\"top 3 X on site Y\", \"the most downloaded…\"), you cannot fan out\nyet: you do not know the items or their URLs. NEVER emit a browser\nnode without a real `metadata.url`. Seed only the listing browser\nand a distiller whose question instructs it to emit the per-item\nnodes as successors once the real URLs exist (see the worked\nexample at the end of this prompt).\n\nWhen the user demands a strict format constraint the writer might\nmiss (\"exactly 5-7-5 syllables\", \"valid JSON\", \"≤ 280 characters\"),\ninsert a `critic` node between the writing node and the formatter.\nIts input is the writing node id. Its metadata.question repeats\nthe constraint. If the critic fails, the orchestrator re-plans.\n\nIf MEMORY HITS appear in the prompt, the agent already has indexed\nmaterial relevant to this query (FAISS-ranked vector hits with\nchunks). Prefer routing the answer through the existing knowledge\nbase: emit a `retriever` or, when the hits clearly answer the query\nalready, go straight to a `formatter` that synthesises from MEMORY\nHITS — do NOT emit a `researcher` to re-fetch material the agent\nhas already indexed.\n\nIf FAILURE appears in the prompt, do not re-emit the failing step\non the same inputs. In particular: if FAILURE mentions\n`gateway_blocked` for a Browser node, the target URL refused\nautomation (CAPTCHA / login wall / geo-block). Do NOT retry the\nsame URL; pick a different source or hand back to the user with\nthe formatter.\n\nRecovery — when FAILURE is present AND your INPUTS include `n:*`\nentries beyond USER_QUERY: those `n:*` entries are nodes from THIS\nrun that already completed successfully. Their full outputs are\nin the INPUTS block.\n  - WIRE THEM BY ID in your successor nodes' `inputs`. Reference\n    each as `n:<that-id>` exactly as it appears in INPUTS.\n  - DO NOT re-emit a fresh researcher / browser / retriever /\n    distiller node to redo work whose result is already in INPUTS.\n  - Only emit fresh successor nodes for (a) the failing step, with\n    a DIFFERENT approach — different query, source, or scope —\n    and (b) any downstream node that depended on the failing one\n    (e.g. a distiller or formatter that needed its output).\n  - Your formatter should list USER_QUERY plus every relevant\n    `n:*` input (prior successes) plus any new fresh-node label,\n    so it can synthesise the final answer from the union of prior\n    successes and new results.\n\nRecovery example. Original run: planner → researcher × 3 → formatter.\nTwo researchers (`n:2`, `n:3`) succeeded; the third failed; the\nrecovery Planner receives USER_QUERY, n:2, n:3 in INPUTS plus a\nFAILURE for the third. Emit:\n{\"rationale\": \"Reuse the two successful researchers; retry the failing one with a narrower query.\",\n \"nodes\": [\n   {\"skill\":\"researcher\",\"inputs\":[],\n    \"metadata\":{\"label\":\"rRetry\",\"question\":\"<narrower sub-question for the failed item>\"}},\n   {\"skill\":\"formatter\",\"inputs\":[\"USER_QUERY\",\"n:2\",\"n:3\",\"n:rRetry\"],\n    \"metadata\":{\"label\":\"out\"}}]}\n\nExample — single-item query (researcher takes USER_QUERY because\nthere is nothing to fan out over):\n{\"rationale\": \"Look it up and answer.\",\n \"nodes\": [\n   {\"skill\":\"researcher\",\"inputs\":[\"USER_QUERY\"],\n    \"metadata\":{\"label\":\"r1\",\"question\":\"...\"}},\n   {\"skill\":\"formatter\",\"inputs\":[\"USER_QUERY\",\"n:r1\"],\n    \"metadata\":{\"label\":\"out\"}}]}\n\nExample — fan-out over N items (\"populations of London, Paris,\nBerlin; which two are closest?\"). Each researcher is scoped by\nmetadata.question and does NOT receive USER_QUERY; the formatter\ndoes, so it can answer the comparison the user asked for:\n{\"rationale\": \"Fetch each city's population in parallel, then compare.\",\n \"nodes\": [\n   {\"skill\":\"researcher\",\"inputs\":[],\n    \"metadata\":{\"label\":\"rL\",\"question\":\"current population of London\"}},\n   {\"skill\":\"researcher\",\"inputs\":[],\n    \"metadata\":{\"label\":\"rP\",\"question\":\"current population of Paris\"}},\n   {\"skill\":\"researcher\",\"inputs\":[],\n    \"metadata\":{\"label\":\"rB\",\"question\":\"current population of Berlin\"}},\n   {\"skill\":\"formatter\",\"inputs\":[\"USER_QUERY\",\"n:rL\",\"n:rP\",\"n:rB\"],\n    \"metadata\":{\"label\":\"out\"}}]}\n\nWhen the user asks to verify / fact-check / double-check a claim, or when\nthe correctness of one specific factual or numeric claim is the whole\npoint of the request, add a `verifier` node. Wire the evidence nodes\n(researcher / retriever / coder results) as its `inputs`, and put the exact\nclaim to check in its metadata.question. Then wire the final `formatter` to\ndepend on BOTH the evidence and the verifier, so it can report the verdict\nand add an honest caveat when the claim does not hold. A `verifier` is NOT\na `critic`: it does not trigger re-planning, it annotates the answer. (If a\n`coder` is part of this graph, remember the formatter is automatic — in\nthat case put the verifier BEFORE the coder, checking the raw evidence.)\n\nWorked example — \"compare the top 3 text-generation models on Hugging Face\nby downloads (or likes)\": the Hugging Face models LISTING page already shows\nevery comparison field on each model card — name, parameter size (e.g. 8B,\n12B), downloads, and likes. So you do NOT need to open each model's detail\npage; one listing browse gives you everything. Emit EXACTLY THREE nodes:\n  1. browser  label=b_list, url=https://huggingface.co/models,\n     goal=\"click the 'Text Generation' task filter link in the left\n     sidebar; then click the 'Sort: Trending' dropdown and choose the\n     requested sort (Most likes, or Most downloads); then report the top 3\n     model cards verbatim — each card shows name, parameter size, downloads\n     and likes — and declare done\"\n     (write browser goals as a PROCEDURE — name the exact links/buttons to\n     click in order and end with what to report; the page driver follows\n     recipes far more reliably than it invents navigation)\n  2. distiller label=d_list, inputs=[\"n:b_list\"], question=\"for each of the\n     top 3 models extract: name, full https://huggingface.co/<org>/<model>\n     URL, parameter size, downloads, and likes, as fields model_1_*,\n     model_2_*, model_3_*. License is not shown on listing cards — set each\n     license field to 'see model card'. Do NOT emit successors.\"\n  3. formatter label=f_final, inputs=[\"USER_QUERY\", \"n:d_list\"]\nThis single-wave plan has exactly ONE formatter, so the final answer is\ndeterministic. Do NOT emit per-model detail-page browser nodes for this\ntask: detail pages add only the license (which gated models like Llama hide\nbehind a sign-in wall, derailing the run), while costing a fragile second\nbrowse per model. Keep it to the one listing browse. Never emit a browser\nnode without a real `metadata.url`, and never schedule more than three\nbrowser nodes in parallel.\n\nUSER_QUERY: Compare top 3 Hugging Face text-generation models sorted by likes\n\nFAILURE:\ncritic failed target=n:13 child=n:14 rationale=The upstream output is sorted by downloads (descending: 9.87M, 5.59M, 915k), not by likes as requested. The user query explicitly asks for models 'sorted by likes,' but the three models should be ordered by likes (13.4k, 6.57k, 6.07k) instead.\n\nMEMORY HITS (1 from FAISS):\n  - [scratchpad] Task to compare top 3 Hugging Face text-generation models by downloads, reporting name, downloads, likes, license, and parameter count in a table\n      source: user_query\n      raw: Compare the top 3 text-generation models on Hugging Face sorted by downloads - report name, downloads, likes, license and parameter count in a comparison table\n\nINPUTS:\n[\n  {\n    \"id\": \"USER_QUERY\",\n    \"kind\": \"query\",\n    \"value\": \"Compare top 3 Hugging Face text-generation models sorted by likes\"\n  }\n]",
+  "started_at": 1781336138.7742298,
+  "completed_at": 1781336144.475588,
+  "retries": 0
+}
